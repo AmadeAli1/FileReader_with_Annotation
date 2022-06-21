@@ -2,20 +2,26 @@ package model;
 
 import anotation.Campo;
 import anotation.DataType;
+import anotation.DataType.*;
 import anotation.LerFicheiro;
 
-@LerFicheiro(filename = "src\\file.txt", separador = "/")
+import java.util.StringJoiner;
+
+import static anotation.DataType.BOOLEAN;
+import static anotation.DataType.BYTE;
+
+@LerFicheiro(filename = "src\\file.txt", separador = "|")
 public class Aluno {
     @Campo(min = 5, max = 20)
     private String nome;
 
-    @Campo(min = 5, max = 20)
+    @Campo(min = 5, max = 20, valid = {"gestao", "medicina", "informatica"})
     private String curso;
 
-    @Campo(type = DataType.BYTE, min = 16, max = 30)
+    @Campo(type = BYTE, min = 16, max = 30)
     private Byte idade;
 
-    @Campo(type = DataType.BOOLEAN, min = 4, max = 5)
+    @Campo(type = BOOLEAN, min = 4, max = 5)
     private Boolean devendo;
 
     public Aluno(String nome, String curso, Byte idade, Boolean devendo) {
@@ -42,12 +48,12 @@ public class Aluno {
 
     @Override
     public String toString() {
-        return "Aluno{" +
-                "nome='" + nome + '\'' +
-                ", curso='" + curso + '\'' +
-                ", idade=" + idade +
-                ", devendo=" + devendo +
-                '}';
+        return new StringJoiner(", ", Aluno.class.getSimpleName() + "[", "]")
+                .add("nome='" + nome + "'")
+                .add("curso='" + curso + "'")
+                .add("idade=" + idade)
+                .add("devendo=" + devendo)
+                .toString();
     }
 
 }

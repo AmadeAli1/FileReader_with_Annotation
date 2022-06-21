@@ -1,0 +1,3 @@
+firstname=Amade|lastname=Aly|idade=20|estado_civil=playboy
+firstname=Amamamamamam|lastname=Aly|idade=20|estado_civil=playboy
+firstname=Archiel|lastname=Santos|idade=18|estado_civil=playboy

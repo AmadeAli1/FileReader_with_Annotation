@@ -1,14 +1,16 @@
 package tools;
 
 import anotation.Campo;
-import anotation.DataType;
-import anotation.LerFicheiro;
 import anotation.FileReaderListener;
+import anotation.LerFicheiro;
 
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.StringTokenizer;
 
 //@SuppressWarnings("unchecked")
 public class Config<T> {
@@ -20,7 +22,58 @@ public class Config<T> {
         this.listener = listener;
         this.clazz = clazz;
         this.lista = new ArrayList<>();
-        ler();
+        //ler();
+        read();
+    }
+
+
+    public void read() {
+        String filename = clazz.getAnnotation(LerFicheiro.class).filename();
+        String separador = clazz.getAnnotation(LerFicheiro.class).separador();
+        try {
+            FileReader fileReader = new FileReader(filename);
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            var next = bufferedReader.readLine();
+            StringTokenizer tok;
+
+            while (next != null) {
+                tok = new StringTokenizer(next, separador);
+                T data = clazz.getConstructor().newInstance();
+                for (int i = 0; i < clazz.getDeclaredFields().length; i++) {
+                    if (tok.hasMoreElements()) {
+                        var value = tok.nextToken().split("=");
+                        //[nome=Amadr]
+                        var field = clazz.getDeclaredField(value[0].trim());
+                        field.setAccessible(true);
+                        if (field.isAnnotationPresent(Campo.class)) {
+                            var type = field.getAnnotation(Campo.class).type();
+                            var valid = field.getAnnotation(Campo.class).valid();
+
+                            if (valid.length != 0) {
+                                var ks = Arrays.stream(valid).filter(s -> s.equalsIgnoreCase(value[1])).count();
+                                if (ks == 0) {
+                                    throw new IllegalArgumentException("O campo " + value[0] + " requer dados validos ::> " + Arrays.stream(valid).toList() + " <::");
+                                }
+                            }
+
+                            var result = type.convert(value[1]);
+                            field.set(data, result);
+                        }
+                    } else {
+                        break;
+                    }
+                }
+                lista.add(data);
+                next = bufferedReader.readLine();
+            }
+            listener.result(lista);
+            fileReader.close();
+            bufferedReader.close();
+        } catch (IllegalAccessException | IOException | InvocationTargetException | NoSuchMethodException | InstantiationException e) {
+            e.printStackTrace();
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void ler() {
@@ -41,7 +94,7 @@ public class Config<T> {
                     if (field.isAnnotationPresent(Campo.class)) {
                         var type = field.getAnnotation(Campo.class).type();
                         var token = tok.nextToken();
-                        var current = DataType.convert(type, token);
+                        var current = type.convert(token);
                         field.set(data, current);
                     }
                 }
@@ -78,6 +131,7 @@ public class Config<T> {
         }
 
     }
+
     final public boolean validar(T object) {
         Class<?> clzx = object.getClass();
         var state = true;
@@ -115,12 +169,12 @@ public class Config<T> {
         return state;
     }
 
-    public void save(List<T> objects){
+    public void save(List<T> objects) {
         var filename = clazz.getAnnotation(LerFicheiro.class).filename();
         //var separador = clazz.getAnnotation(LerFicheiro.class).separador();
         //StringBuilder line = new StringBuilder();
         var state = true;
-        try{
+        try {
             var file = new FileWriter(filename, true);
             var buff = new BufferedWriter(file);
             for (T data : objects) {
@@ -133,10 +187,9 @@ public class Config<T> {
             }
             buff.close();
             file.close();
-        }catch (IOException e){
+        } catch (IOException e) {
             System.out.println(e.getMessage());
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         if (state) System.out.println("Dados Gravados com Sucesso");
@@ -148,11 +201,12 @@ public class Config<T> {
         for (Field field : clazzy.getDeclaredFields()) {
             field.setAccessible(true);
             if (field.isAnnotationPresent(Campo.class)) {
+                var sv = field.getName() + "=" + field.get(data);
                 if (count == clazzy.getDeclaredFields().length - 1) {
-                    line.append(field.get(data));
+                    line.append(sv);
                     break;
                 } else {
-                    line.append(field.get(data)).append(separador);
+                    line.append(sv).append(separador);
                 }
             }
             count++;

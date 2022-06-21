@@ -1,16 +1,17 @@
 package tools;
 
-import model.Aluno;
+import model.Pessoa;
 
 import java.util.List;
 
 public class Execute {
     public static void main(String[] args) {
-        Config<Aluno> config = new Config<>(Aluno.class, a -> a.forEach(System.out::println));
-        config.save(List.of(
-                new Aluno("Amade", "Informatica", (byte) 22, false),
-                new Aluno("Rafae", "Direito", (byte) 26, false),
-                new Aluno("Acacio", "Gestao", (byte) 19, false)
-        ));
+        Config<Pessoa> config = new Config<>(Pessoa.class, Execute::reader);
+        config.save(List.of(new Pessoa("Archiel","Santos",(byte)18,"playboy")));
     }
+
+    public static void reader(List<Pessoa> alunos) {
+        alunos.forEach(System.out::println);
+    }
+
 }
